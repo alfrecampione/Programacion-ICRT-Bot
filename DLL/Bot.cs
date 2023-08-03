@@ -1,5 +1,4 @@
-﻿using System.Threading.Channels;
-using Telegram.Bot;
+﻿using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -9,12 +8,13 @@ namespace DLL;
 
 public class Bot
 {
-    private readonly TelegramBotClient? _myBot;
+    private readonly string _basePath = "https://eprog.importer.premiumtesh.nat.cu/api-data";
+    private readonly string _channelPath = "/channel";
 
     public Bot(string token)
     {
-        _myBot = new TelegramBotClient(token);
-        this.StartReceiver(_myBot);
+        var myBot = new TelegramBotClient(token);
+        this.StartReceiver(myBot);
     }
 
     public async Task StartReceiver(ITelegramBotClient? botClient)
@@ -30,31 +30,50 @@ public class Bot
 
     public async Task OnMessage(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
-        if (update.Message is { } message)
+        if (update.Message is {} message)
         {
             #region Commands Seccion
-            if (message.Text == "/channel_list")
-                await bot.SendTextMessageAsync(message.From.Id, "Choose a channel",
-                    replyMarkup: CallbackButtons.Channels,
-                    cancellationToken: cancellationToken);
-            if (message.Text == "/start")
-                await bot.SendTextMessageAsync(message.From.Id, "Welcome to the bot",
-                    replyMarkup: CallbackButtons.Start,
-                    cancellationToken: cancellationToken);
+
+            switch (message.Text)
+            {
+                case "/channel_list":
+                    await bot.SendTextMessageAsync(message.From!.Id, "Choose a channel",
+                        replyMarkup: CallbackButtons.GetChannels(_basePath,_channelPath,0,"sorts=name"),
+                        cancellationToken: cancellationToken);
+                    break;
+                case "/start":
+                    await bot.SendTextMessageAsync(message.From!.Id, "Welcome to the bot",
+                        replyMarkup: CallbackButtons.Start,
+                        cancellationToken: cancellationToken);
+                    break;
+            }
+
             #endregion
         }
 
         if (update.CallbackQuery is {} callbackQuery)
         {
+            var args = callbackQuery.Data?.Split("-");
             #region InlineButtons Seccion
-            if(callbackQuery.Data == "Channels List")
+
+            switch (args?[0])
             {
-                var messageSent = await bot.SendTextMessageAsync(callbackQuery.From.Id, "Choose a channel",
-                    replyMarkup: CallbackButtons.Channels,
-                    cancellationToken: cancellationToken);
-                await bot.DeleteMessageAsync(callbackQuery.Message.Chat.Id, callbackQuery.Message.MessageId,
-                    cancellationToken: cancellationToken);
+                case "Channel List":
+                    await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
+                        cancellationToken: cancellationToken);
+                    await bot.SendTextMessageAsync(callbackQuery.From.Id, "Choose a channel",
+                        replyMarkup: CallbackButtons.GetChannels(_basePath,_channelPath,(args.Length>1)?int.Parse(args[1]):0,"sorts=name"),
+                        cancellationToken: cancellationToken);
+                    break;
+                case "Start":
+                    await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
+                        cancellationToken: cancellationToken);
+                    await bot.SendTextMessageAsync(callbackQuery.From!.Id, "Welcome to the bot",
+                        replyMarkup: CallbackButtons.Start,
+                        cancellationToken: cancellationToken);
+                    break;
             }
+
             #endregion
         }
     }
