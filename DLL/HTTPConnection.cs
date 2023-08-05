@@ -9,7 +9,8 @@ public class HttpConnection<T> where T:ResponseBase
         HttpResponseMessage responseMessage = await client.GetAsync(path);
         if (responseMessage.IsSuccessStatusCode)
         {
-            return await responseMessage.Content.ReadFromJsonAsync<T>();
+            var response =  await responseMessage.Content.ReadFromJsonAsync<T>();
+            return response;
         }
         return null;
     }

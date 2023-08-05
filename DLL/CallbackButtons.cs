@@ -1,4 +1,5 @@
-﻿using Telegram.Bot.Types.ReplyMarkups;
+﻿using Telegram.Bot.Types;
+using Telegram.Bot.Types.ReplyMarkups;
 
 namespace DLL;
 
@@ -21,33 +22,44 @@ public static class CallbackButtons
             select new List<InlineKeyboardButton>()
                 { InlineKeyboardButton.WithCallbackData(channel.name, $"Channel-{channel.name}") });
 
-        buttons.Add(CreateChangePageButtons(page, page > 0, page < channels.Length / 10));
+        buttons.Add(CreateChangePageButtons(page, page > 0, page < channels.Length / 10,"Channel List"));
 
         buttons.Add(new List<InlineKeyboardButton>() { InlineKeyboardButton.WithCallbackData("Back", "Start") });
         return new InlineKeyboardMarkup(buttons);
     }
-    
-    public static InlineKeyboardMarkup GetEventRange(string basePath, string endpoint, string channelName,
+
+    public static InlineKeyboardMarkup GetEventRange(string basePath, string endpoint,string channelName,
         int page, params string[] args)
     {
-        var fullPath = basePath + endpoint + "?allrecords=1";
+        var fullPath = basePath + endpoint +"?allrecords=1";
         fullPath = args.Aggregate(fullPath, (current, param) => current + ("&" + param));
 
         var events = HttpConnection<ResponseEvent>.GetResponseAsync(fullPath).Result?.results;
         var buttons = new List<List<InlineKeyboardButton>>();
-        
+
         if (events == null) return new InlineKeyboardMarkup(buttons);
 
-        throw new NotImplementedException();
+        var distincDates = events.Where((t, i) => i > 0 && events[i - 1]._eventInitialDateTime != t._eventInitialDateTime)
+            .Select(e => e._eventInitialDateTime).ToArray();
+        var datesToShow = distincDates.Chunk(10).Skip(page).First();
+        
+        buttons.AddRange(from date in datesToShow
+            select new List<InlineKeyboardButton>()
+                { InlineKeyboardButton.WithCallbackData($"{date.Day}--{date.Month}", $"Date-{channelName}-{date}") });
+        
+        buttons.Add(CreateChangePageButtons(page,page>0,page<distincDates.Count()/10,$"Date List-{channelName}"));
+        
+        buttons.Add(new List<InlineKeyboardButton>() { InlineKeyboardButton.WithCallbackData("Back", "Start") });
+        return new InlineKeyboardMarkup(buttons);
     }
 
-    private static List<InlineKeyboardButton> CreateChangePageButtons(int page, bool back, bool next)
+    private static List<InlineKeyboardButton> CreateChangePageButtons(int page, bool back, bool next,string callbackData)
     {
         List<InlineKeyboardButton> buttonsList = new();
         if (back)
-            buttonsList.Add(InlineKeyboardButton.WithCallbackData("⏪", $"Channel List-{page - 1}"));
+            buttonsList.Add(InlineKeyboardButton.WithCallbackData("⏪", $"{callbackData}-{page - 1}"));
         if (next)
-            buttonsList.Add(InlineKeyboardButton.WithCallbackData("⏩", $"Channel List-{page + 1}"));
+            buttonsList.Add(InlineKeyboardButton.WithCallbackData("⏩", $"{callbackData}-{page + 1}"));
         return buttonsList;
     }
 

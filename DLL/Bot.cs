@@ -10,6 +10,7 @@ public class Bot
 {
     private readonly string _basePath = "https://eprog.importer.premiumtesh.nat.cu/api-data";
     private readonly string _channelPath = "/channel";
+    private readonly string _eventPath = "/event";
 
     public Bot(string token)
     {
@@ -30,7 +31,7 @@ public class Bot
 
     public async Task OnMessage(ITelegramBotClient bot, Update update, CancellationToken cancellationToken)
     {
-        if (update.Message is {} message)
+        if (update.Message is { } message)
         {
             #region Commands Seccion
 
@@ -38,7 +39,7 @@ public class Bot
             {
                 case "/channel_list":
                     await bot.SendTextMessageAsync(message.From!.Id, "Choose a channel",
-                        replyMarkup: CallbackButtons.GetChannels(_basePath,_channelPath,0,"sorts=name"),
+                        replyMarkup: CallbackButtons.GetChannels(_basePath, _channelPath, 0, "sorts=name"),
                         cancellationToken: cancellationToken);
                     break;
                 case "/start":
@@ -51,19 +52,45 @@ public class Bot
             #endregion
         }
 
-        if (update.CallbackQuery is {} callbackQuery)
+        if (update.CallbackQuery is { } callbackQuery)
         {
             var args = callbackQuery.Data?.Split("-");
+
             #region InlineButtons Seccion
 
             switch (args?[0])
             {
                 case "Channel List":
+                    var reply = CallbackButtons.GetChannels(_basePath, _channelPath,
+                        (args.Length > 1) ? int.Parse(args[1]) : 0, "sorts=name");
                     await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
                         cancellationToken: cancellationToken);
                     await bot.SendTextMessageAsync(callbackQuery.From.Id, "Choose a channel",
-                        replyMarkup: CallbackButtons.GetChannels(_basePath,_channelPath,(args.Length>1)?int.Parse(args[1]):0,"sorts=name"),
+                        replyMarkup: reply,
                         cancellationToken: cancellationToken);
+                    break;
+                case "Channel":
+                    reply = CallbackButtons.GetEventRange(_basePath, _eventPath,args[1], 0,
+                        $"filters=channelName=={args[1]}","sorts=eventInitialDate");
+                    await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
+                        cancellationToken: cancellationToken);
+                    await bot.SendTextMessageAsync(callbackQuery.From.Id, "Choose a date range",
+                        replyMarkup: reply,
+                        cancellationToken: cancellationToken);
+                    break;
+                case "Date List":
+                    if (DateOnly.TryParse(args[2], out _))
+                        throw new NotImplementedException();
+                    else
+                    {
+                        reply = CallbackButtons.GetEventRange(_basePath, _eventPath,args[1], int.Parse(args[2]),
+                            $"filters=channelName=={args[1]}","sorts=eventInitialDate");
+                        await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
+                            cancellationToken: cancellationToken);
+                        await bot.SendTextMessageAsync(callbackQuery.From.Id, "Choose a date range",
+                            replyMarkup: reply,
+                            cancellationToken: cancellationToken);
+                    }
                     break;
                 case "Start":
                     await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
