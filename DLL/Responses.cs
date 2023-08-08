@@ -30,48 +30,20 @@ public record Event
     public string? description { get; set; }
     public string? eventStartTime { get; set; }
 
-    public TimeOnly _eventStartTime
-    {
-        get
-        {
-            var args = eventStartTime!.Split(':');
-            return new TimeOnly(int.Parse(args[0]), int.Parse(args[1]), int.Parse(args[2]));
-        }
-    }
+    public TimeOnly _eventStartTime => TimeOnly.Parse(eventStartTime!);
 
     public string? eventEndTime { get; set; }
 
-    public TimeOnly _eventEndTime
-    {
-        get
-        {
-            var args = eventEndTime!.Split(':');
-            return new TimeOnly(int.Parse(args[0]), int.Parse(args[1]), int.Parse(args[2]));
-        }
-    }
+    public TimeOnly _eventEndTime => TimeOnly.Parse(eventEndTime!);
 
     public string? channelName { get; set; }
     public string? eventInitialDateTime { get; set; }
 
-    public DateTime _eventInitialDateTime
-    {
-        get
-        {
-            var args = eventInitialDateTime!.Split(':');
-            return new DateTime(int.Parse(args[0]), int.Parse(args[1]), int.Parse(args[2]));
-        }
-    }
+    public DateTime _eventInitialDateTime => DateTime.Parse(eventInitialDateTime!);
 
     public string? eventEndDateTime { get; set; }
 
-    public DateTime _eventEndDateTime
-    {
-        get
-        {
-            var args = eventEndDateTime!.Split(':');
-            return new DateTime(int.Parse(args[0]), int.Parse(args[1]), int.Parse(args[2]));
-        }
-    }
+    public DateTime _eventEndDateTime => DateTime.Parse(eventEndDateTime!);
 
     public string? id { get; set; }
 }

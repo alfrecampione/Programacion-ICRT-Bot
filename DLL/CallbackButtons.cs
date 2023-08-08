@@ -39,17 +39,17 @@ public static class CallbackButtons
 
         if (events == null) return new InlineKeyboardMarkup(buttons);
 
-        var distincDates = events.Where((t, i) => i > 0 && events[i - 1]._eventInitialDateTime != t._eventInitialDateTime)
+        var distincDates = events.Where((t, i) => i > 0 && events[i - 1]._eventInitialDateTime.Date != t._eventInitialDateTime.Date)
             .Select(e => e._eventInitialDateTime).ToArray();
         var datesToShow = distincDates.Chunk(10).Skip(page).First();
         
         buttons.AddRange(from date in datesToShow
             select new List<InlineKeyboardButton>()
-                { InlineKeyboardButton.WithCallbackData($"{date.Day}--{date.Month}", $"Date-{channelName}-{date}") });
+                { InlineKeyboardButton.WithCallbackData($"{date.Day}/{date.Month}", $"Date-{channelName}-{date}") });
         
         buttons.Add(CreateChangePageButtons(page,page>0,page<distincDates.Count()/10,$"Date List-{channelName}"));
         
-        buttons.Add(new List<InlineKeyboardButton>() { InlineKeyboardButton.WithCallbackData("Back", "Start") });
+        buttons.Add(new List<InlineKeyboardButton>() { InlineKeyboardButton.WithCallbackData("Back", "Channel List") });
         return new InlineKeyboardMarkup(buttons);
     }
 
