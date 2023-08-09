@@ -1,4 +1,5 @@
-﻿using Telegram.Bot;
+﻿using System.Runtime.InteropServices.JavaScript;
+using Telegram.Bot;
 using Telegram.Bot.Exceptions;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
@@ -61,36 +62,29 @@ public class Bot
             switch (args?[0])
             {
                 case "Channel List":
-                    var reply = CallbackButtons.GetChannels(_basePath, _channelPath,
-                        (args.Length > 1) ? int.Parse(args[1]) : 0, "sorts=name");
+                    var page = (args.Length > 1) ? int.Parse(args[1]) : 1;
+                    var reply = CallbackButtons.GetChannels(_basePath, _channelPath, page
+                        , "sorts=name", $"page={page}", $"pageSize=10");
                     await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
                         cancellationToken: cancellationToken);
                     await bot.SendTextMessageAsync(callbackQuery.From.Id, "Choose a channel",
                         replyMarkup: reply,
                         cancellationToken: cancellationToken);
                     break;
-                case "Channel":
-                    reply = CallbackButtons.GetEventRange(_basePath, _eventPath,args[1], 0,
-                        $"filters=channelName=={args[1]}","sorts=eventInitialDate");
+                case "Event List":
+                    if (!DateTime.TryParse(args[2], out var dateTime))
+                        dateTime = DateTime.Today;
+                    
+                    //TODO: Fix filter by Date using only a DateOnly format
+                    reply = CallbackButtons.GetEvent(_basePath, _eventPath, args[1], dateTime,
+                        $"filters=channelName=={args[1]}", $"filters=eventInitialDate_={dateTime:yy-MM-dd}",
+                        "sorts=eventStartTime");
                     await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
                         cancellationToken: cancellationToken);
-                    await bot.SendTextMessageAsync(callbackQuery.From.Id, "Choose a date range",
+                    await bot.SendTextMessageAsync(callbackQuery.From.Id, $"Event List--{dateTime}",
                         replyMarkup: reply,
                         cancellationToken: cancellationToken);
-                    break;
-                case "Date List":
-                    if (DateOnly.TryParse(args[2], out _))
-                        throw new NotImplementedException();
-                    else
-                    {
-                        reply = CallbackButtons.GetEventRange(_basePath, _eventPath,args[1], int.Parse(args[2]),
-                            $"filters=channelName=={args[1]}","sorts=eventInitialDate");
-                        await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
-                            cancellationToken: cancellationToken);
-                        await bot.SendTextMessageAsync(callbackQuery.From.Id, "Choose a date range",
-                            replyMarkup: reply,
-                            cancellationToken: cancellationToken);
-                    }
+
                     break;
                 case "Start":
                     await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
