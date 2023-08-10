@@ -44,6 +44,7 @@ public class Bot
                         cancellationToken: cancellationToken);
                     break;
                 case "/start":
+                    Console.WriteLine("Chat iniciado con: "+message.From!.Username);
                     await bot.SendTextMessageAsync(message.From!.Id, "Welcome to the bot",
                         replyMarkup: CallbackButtons.Start,
                         cancellationToken: cancellationToken);
@@ -74,14 +75,16 @@ public class Bot
                 case "Event List":
                     if (!DateTime.TryParse(args[2], out var dateTime))
                         dateTime = DateTime.Today;
-                    
+
                     //TODO: Fix filter by Date using only a DateOnly format
                     reply = CallbackButtons.GetEvent(_basePath, _eventPath, args[1], dateTime,
-                        $"filters=channelName=={args[1]}", $"filters=eventInitialDate_={dateTime:yy-MM-dd}",
-                        "sorts=eventStartTime");
+                        "allrecords=1",
+                        $"filters=channelName=={args[1]},eventInitialDateTime>={dateTime:yyyy-MM-dd}T04:00:00Z,eventInitialDateTime<={dateTime.AddDays(1):yyyy-MM-dd}T03:59:59Z",
+                        "sorts=eventInitialDateTime");
                     await bot.DeleteMessageAsync(callbackQuery.Message!.Chat.Id, callbackQuery.Message.MessageId,
                         cancellationToken: cancellationToken);
-                    await bot.SendTextMessageAsync(callbackQuery.From.Id, $"Event List--{dateTime}",
+                    await bot.SendTextMessageAsync(callbackQuery.From.Id,
+                        $"{args[1]}--{dateTime.Day}/{dateTime.Month}/{dateTime.Year}",
                         replyMarkup: reply,
                         cancellationToken: cancellationToken);
 

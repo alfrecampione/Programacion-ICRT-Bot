@@ -33,8 +33,11 @@ public static class CallbackButtons
         return new InlineKeyboardMarkup(buttons);
     }
 
-
-    public static InlineKeyboardMarkup GetEvent(string basePath, string endpoint,string channelName ,DateTime date,params string[] args)
+    //🔴 - Before
+    //🟢 - Now 
+    //🟡 - after
+    public static InlineKeyboardMarkup GetEvent(string basePath, string endpoint, string channelName, DateTime date,
+        params string[] args)
     {
         var fullPath = basePath + endpoint;
         if (args.Length > 0)
@@ -46,14 +49,22 @@ public static class CallbackButtons
         var responseEvents = HttpConnection<ResponseEvent>.GetResponseAsync(fullPath).Result;
         var events = responseEvents?.results;
         var buttons = new List<List<InlineKeyboardButton>>();
-        
+
         if (events != null)
         {
+            string GetColor(Event actualEvent)
+            {
+                if (actualEvent._eventInitialDateTime > DateTime.Now)
+                    return "🟡";
+                if (actualEvent._eventEndDateTime < DateTime.Now)
+                    return "🔴";
+                return "🟢";
+            }
 
             buttons.AddRange(from @event in events
                 select new List<InlineKeyboardButton>()
                 {
-                    InlineKeyboardButton.WithCallbackData($"*color*{@event._eventStartTime}->{@event.title}",
+                    InlineKeyboardButton.WithCallbackData($"{GetColor(@event)}{@event._eventStartTime}->{@event.title}",
                         $"Event List-{channelName}-{date}")
                 });
         }
