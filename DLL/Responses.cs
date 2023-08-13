@@ -1,51 +1,51 @@
 ﻿// ReSharper disable InconsistentNaming
 
+// ReSharper disable ClassNeverInstantiated.Global
 namespace DLL;
 
 public abstract class ResponseBase
 {
-    public int pageNumber { get; set; }
-    public int pageSize { get; set; }
-    public bool pageFound { get; set; }
-    public int total { get; set; }
-    public int records { get; set; }
-    public bool succeeded { get; set; }
+    public int pageNumber { get; init; }
+    public int pageSize { get; init; }
+    public bool pageFound { get; init; }
+    public int total { get; init; }
+    public int records { get; init; }
+    public bool succeeded { get; init; }
 }
 
 public record Channel
 {
-    public string? idFromEprog { get; set; }
-    public string? name { get; set; }
-    public string? logo { get; set; }
-    public string? baseLogo { get; set; }
-    public long eventsCount { get; set; }
-    public string? id { get; set; }
+    public string? idFromEprog { get; init; }
+    public string? name { get; init; }
+    public string? logo { get; init; }
+    public string? baseLogo { get; init; }
+    public long eventsCount { get; init; }
+    public string? id { get; init; }
 }
 
-//TODO: Makes the get properties to convert string to its params
 public record Event
 {
-    public string? eventId { get; set; }
-    public string? title { get; set; }
-    public string? description { get; set; }
-    public string? eventStartTime { get; set; }
+    public string? eventId { get; init; }
+    public string? title { get; init; }
+    public string? description { get; init; }
+    public string? eventStartTime { get; init; }
 
     public TimeOnly _eventStartTime => TimeOnly.Parse(eventStartTime!);
 
-    public string? eventEndTime { get; set; }
+    public string? eventEndTime { get; init; }
 
     public TimeOnly _eventEndTime => TimeOnly.Parse(eventEndTime!);
 
-    public string? channelName { get; set; }
-    public string? eventInitialDateTime { get; set; }
+    public string? channelName { get; init; }
+    public string? eventInitialDateTime { get; init; }
 
     public DateTime _eventInitialDateTime => DateTime.Parse(eventInitialDateTime!);
 
-    public string? eventEndDateTime { get; set; }
+    public string? eventEndDateTime { get; init; }
 
     public DateTime _eventEndDateTime => DateTime.Parse(eventEndDateTime!);
 
-    public string? id { get; set; }
+    public string? id { get; init; }
 }
 
 public class ResponseChannel : ResponseBase
